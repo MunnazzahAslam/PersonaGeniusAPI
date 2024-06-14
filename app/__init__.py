@@ -1,13 +1,10 @@
 from flask import Flask, request, jsonify
-from flask_cors import CORS
 import pandas as pd
 import json
 from utils.segmentation import clean_data, normalize_columns, feature_selection_variance_threshold, feature_selection_k_best, cluster_kmeans_gpu, process_and_visualize_labeled_data, analyze_summary_dynamic, generate_persona, initialize
 
 initialize()
 app = Flask(__name__)
-CORS(app)
-
 data_store = {}
 
 @app.route('/', methods=['GET'])
@@ -23,9 +20,8 @@ def upload_file():
     try:
         data = pd.read_csv(uploaded_file, sep=None, engine="python")
         data_store['raw_data'] = data
-        total_records = len(data)
 
-        return jsonify({"message": "Data uploaded successfully", "total_records": total_records, "steps_output": {"raw_data": data.head(10).to_dict(orient='list')}}), 200
+        return jsonify({"message": "Data uploaded successfully"}), 200
 
     except Exception as e:
         return jsonify({"error": f"Error processing data: {e}"}), 400
