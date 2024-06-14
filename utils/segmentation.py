@@ -8,25 +8,15 @@ import torch
 import python_avatars as pa
 import matplotlib.pyplot as plt
 import seaborn as sns
-from scipy.cluster.hierarchy import dendrogram, linkage
 from sklearn.preprocessing import LabelEncoder, StandardScaler
-from sklearn.cluster import AgglomerativeClustering, DBSCAN, KMeans
-from sklearn.metrics import (
-    silhouette_score,
-    davies_bouldin_score,
-    calinski_harabasz_score,
-    adjusted_mutual_info_score,
-    fowlkes_mallows_score,
-    adjusted_rand_score,
-)
+from sklearn.cluster import KMeans
 from sklearn.feature_selection import mutual_info_classif, SelectKBest, VarianceThreshold
-from sklearn.metrics.pairwise import pairwise_distances
 from sklearn.model_selection import GridSearchCV
 
 warnings.filterwarnings("ignore")
 
 from langchain import PromptTemplate
-from langchain.output_parsers import ResponseSchema, StructuredOutputParser
+from langchain.output_parsers import StructuredOutputParser
 import google.generativeai as genai
 from dotenv import load_dotenv
 

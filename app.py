@@ -82,3 +82,6 @@ def generate_summary():
     except Exception as e:
         return jsonify({"error": f"Error generating summary and personas: {e}"}), 400
 
+if __name__ == "__main__":
+    app.run(debug=True)
+    
