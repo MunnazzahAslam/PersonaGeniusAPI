@@ -395,10 +395,15 @@ def generate_persona(summary: dict) -> dict:
 
     persona_schema = {
         "name": "response",
-        "description": """{
+        "description": """{{
             "cluster_summaries": [],
             "cluster_personas": []
-        }"""
+        }}"""
+    }
+
+    generation_config = {
+            "temperature": 0.9,
+            "response_mime_type": "application/json"
     }
 
     response_schema = [persona_schema]
@@ -406,55 +411,51 @@ def generate_persona(summary: dict) -> dict:
     format_instructions = output_parser.get_format_instructions()
 
     prompt_template = """
-    I want you to generate two things in valid JSON format:
-    1. Generate a detailed textual cluster summary for each group (defined in the summary first column) in a comma-separated string without keys.
-    2. Generate a detailed customer persona for each group (defined in the summary first column) in the format defined in the example given below (please give one value for demographic data and not ranges):
+    As a marketing researcher, I want you to generate two things in valid JSON format:
+    1. A JSON based detailed cluster summary for each cluster group in a textual format based on the provided demographic, interest, and behavior information.
+    2. A JSON based detailed customer persona for each cluster group defined by each row of summary provided in the format defined in the example (please give one value for demographic data and not ranges):
 
-    IMPORTANT: The output should be a JSON object of two arrays cluster_summaries and cluster_personas. Make sure the JSON is valid.
+    IMPORTANT: The output should be a *JSON* object of two arrays cluster_summaries and cluster_personas. "Make sure the JSON is valid."
 
     Example:
     {{
-        "cluster_summaries": [
-        {{'textual summary of cluster 1', ...}},
-        ],
+        "cluster_summaries": Array of strings based summary of each cluster group,
         "cluster_personas": [
-        {{
-        "demographics": {{
-            "name": "Anna",
-            "age": "age_value",
-            "gender": "gender_value",
-            "marital_status": "marital_status_value",
-            "family_structure": "family_structure_value",
-            "income_level": "income_level_value",
-            "location": "location_value",
-            "occupation": "occupation_value"
-        }},
-        "psychographics": {{
-            "values_and_beliefs": "values_and_beliefs_value",
-            "interests_and_hobbies": "interests_and_hobbies_value",
-            "lifestyle_choices": "lifestyle_choices_value",
-            "technology_usage": "technology_usage_value",
-            "brand_preferences": "brand_preferences_value",
-            "community_engagement": "community_engagement_value",
-            "health_and_wellness": "health_and_wellness_value",
-            "family_dynamics": "family_dynamics_value",
-            "financial_goals": "financial_goals_value",
-            "media_consumption": "media_consumption_value",
-            "environmental_consciousness": "environmental_consciousness_value",
-            "cultural_influences": "cultural_influences_value"
-        }},
-        "needs_and_pain_points": {{
-            "needs": "needs_value",
-            "pain_points": "pain_points_value"
-        }},
-        "behavioral_data": {{
-            "behavioral_drivers": "behavioral_drivers_value",
-            "obstacles_to_purchasing": "obstacles_to_purchasing_value",
-            "expectations": "expectations_value",
-            "marketing_suggestions": "marketing_suggestions_value"
-        }}
-    }}
-    ]
+            demographics: {{
+                name: string,
+                age: number,
+                gender: string,
+                marital_status: string,
+                family_structure: string,
+                income_level: string,
+                location: string,
+                occupation: string,
+            }},
+            psychographics: {{
+                values_and_beliefs: string,
+                interests_and_hobbies: string,
+                lifestyle_choices: string,
+                technology_usage: string,
+                brand_preferences: string,
+                community_engagement: string,
+                health_and_wellness: string,
+                family_dynamics: string,
+                financial_goals: string,
+                media_consumption: string,
+                environmental_consciousness: string,
+                cultural_influences: string,
+            }},
+            needs_and_pain_points: {{
+                needs: string,
+                pain_points: string,
+            }},
+            behavioral_data: {{
+                behavioral_drivers: string,
+                obstacles_to_purchasing: string,
+                expectations: string,
+                marketing_suggestions: string,
+            }},
+            ]
     }}
 
     Summary:
@@ -469,7 +470,7 @@ def generate_persona(summary: dict) -> dict:
         partial_variables={"format_instructions": format_instructions},
     )
 
-    response = model.generate_content(prompt.format(summary=json.dumps(summary)))
+    response = model.generate_content(prompt.format(summary=json.dumps(summary)), generation_config=generation_config)
     output = ""
     for chunk in response:
         output += chunk.text
@@ -480,9 +481,15 @@ def generate_persona(summary: dict) -> dict:
     except json.JSONDecodeError as e:
         raise ValueError(f"Generated content is not valid JSON: {e}")
     
-    for persona in personas.get("response", {}).get("cluster_personas", personas.get("cluster_personas", [])):
-        gender = persona.get("demographics", {}).get("gender", "string")
-        avatar_url = generate_avatar(gender)
-        persona["avatar"] = avatar_url
-            
+    if "response" in personas:
+        for persona in personas["response"].get("cluster_personas", []):
+            gender = persona.get("demographics", {}).get("gender", "string")
+            avatar_url = generate_avatar(gender)
+            persona["avatar"] = avatar_url
+    elif "cluster_personas" in personas:
+        for persona in personas["cluster_personas"]:
+            gender = persona.get("demographics", {}).get("gender", "string")
+            avatar_url = generate_avatar(gender)
+            persona["avatar"] = avatar_url
+
     return personas
