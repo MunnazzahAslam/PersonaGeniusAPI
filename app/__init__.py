@@ -1,8 +1,7 @@
-from flask import Flask,send_file, request, jsonify
+from flask import Flask, request, jsonify
 from flask_cors import CORS
 import pandas as pd
 import json
-import os
 from utils.segmentation import clean_data, normalize_columns, feature_selection_variance_threshold, feature_selection_k_best, cluster_kmeans_gpu, process_and_visualize_labeled_data, analyze_summary_dynamic, generate_persona, initialize
 
 initialize()
@@ -83,5 +82,3 @@ def generate_summary():
     except Exception as e:
         return jsonify({"error": f"Error generating summary and personas: {e}"}), 400
 
-if __name__ == "__main__":
-    app.run(port=8000)
